@@ -30,7 +30,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     title: Text(w.name),
                     subtitle: Text(w.role),
                     trailing: Switch(
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                       value: attendance[w.id] ?? false,
                       onChanged: (val) {
                         setState(() {
