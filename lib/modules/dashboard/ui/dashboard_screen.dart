@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../workforce/ui/add_worker_screen.dart';
+
 import '../../auth/ui/login_screen.dart';
+import '../../workforce/ui/add_worker_screen.dart';
+import '../../materials/ui/materials_screen.dart';
+import '../../expenses/ui/expenses_screen.dart';
+import '../../progress/ui/progress_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -29,18 +33,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.orange.shade50,
 
-      // HEADER
       appBar: AppBar(
-        title: const Text("🏗️ ConstructOS"),
         backgroundColor: Colors.orange,
-
+        title: const Text("🏗️ ConstructOS"),
         actions: [
-          PopupMenuButton(
+          PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == "logout") logout();
+              if (value == "logout") {
+                logout();
+              }
             },
             itemBuilder: (context) => const [
-              PopupMenuItem(value: "site", child: Text("Hyderabad Site")),
+              PopupMenuItem(value: "site", child: Text("📍 Hyderabad Site")),
               PopupMenuItem(value: "logout", child: Text("Logout")),
             ],
           ),
@@ -49,66 +53,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       body: Padding(
         padding: const EdgeInsets.all(12),
-
         child: Column(
           children: [
-            // SITE BAR
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("📍 Hyderabad Site"),
-                  Icon(Icons.keyboard_arrow_down),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            // CARDS
-            Row(
-              children: [
-                _card("Workforce", "52 Present", Icons.people, () {
-                  openScreen(const AddWorkerScreen());
-                }),
-                const SizedBox(width: 10),
-                _card("Materials", "Low Stock", Icons.inventory, () {}),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                _card("Expenses", "₹82,450", Icons.money, () {}),
-                const SizedBox(width: 10),
-                _card("Progress", "42%", Icons.show_chart, () {}),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // QUICK ACTIONS
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _action(Icons.person_add, "Labour", () {
-                  openScreen(AddWorkerScreen());
-                }),
-                _action(Icons.inventory_2, "Matrl", () {}),
-                _action(Icons.attach_money, "Exp", () {}),
-                _action(Icons.trending_up, "Prog", () {}),
-              ],
-            ),
-
-            const Spacer(),
-
-            // BOTTOM NAV
+            // Site Selector
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -116,12 +63,118 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "📍 Hyderabad Site",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Icon(Icons.keyboard_arrow_down),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            // Summary Cards
+            Row(
+              children: [
+                _card("Workforce", "52 Present", Icons.people, () {
+                  openScreen(const AddWorkerScreen());
+                }),
+                const SizedBox(width: 10),
+                _card("Materials", "Low Stock", Icons.inventory, () {
+                  openScreen(const MaterialsScreen());
+                }),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                _card("Expenses", "₹82,450", Icons.attach_money, () {
+                  openScreen(const ExpensesScreen());
+                }),
+                const SizedBox(width: 10),
+                _card("Progress", "42%", Icons.trending_up, () {
+                  openScreen(const ProgressScreen());
+                }),
+              ],
+            ),
+
+            const SizedBox(height: 25),
+
+            // Quick Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _action(Icons.person_add, "Labour", () {
+                  openScreen(const AddWorkerScreen());
+                }),
+                _action(Icons.inventory_2, "Matrl", () {
+                  openScreen(const MaterialsScreen());
+                }),
+                _action(Icons.attach_money, "Exp", () {
+                  openScreen(const ExpensesScreen());
+                }),
+                _action(Icons.trending_up, "Prog", () {
+                  openScreen(const ProgressScreen());
+                }),
+              ],
+            ),
+
+            const Spacer(),
+
+            // Bottom Navigation
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Icon(Icons.home, color: Colors.orange),
-                  Icon(Icons.people),
-                  Icon(Icons.inventory),
-                  Icon(Icons.money),
+                  IconButton(
+                    icon: Icon(
+                      Icons.home,
+                      color: selectedIndex == 0 ? Colors.orange : Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() => selectedIndex = 0);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.people,
+                      color: selectedIndex == 1 ? Colors.orange : Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() => selectedIndex = 1);
+                      openScreen(const AddWorkerScreen());
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.inventory,
+                      color: selectedIndex == 2 ? Colors.orange : Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() => selectedIndex = 2);
+                      openScreen(const MaterialsScreen());
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.attach_money,
+                      color: selectedIndex == 3 ? Colors.orange : Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() => selectedIndex = 3);
+                      openScreen(const ExpensesScreen());
+                    },
+                  ),
                 ],
               ),
             ),
@@ -131,7 +184,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // CARD
   Widget _card(String title, String value, IconData icon, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
@@ -155,8 +207,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 16,
                   fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
               ),
             ],
@@ -166,13 +218,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ACTION
   Widget _action(IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           CircleAvatar(
+            radius: 24,
             backgroundColor: Colors.orange,
             child: Icon(icon, color: Colors.white),
           ),
