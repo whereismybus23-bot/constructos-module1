@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "369902018158",
-    "project_id": "constructos2026",
-    "storage_bucket": "constructos2026.firebasestorage.app"
+    "project_number": "849976822411",
+    "project_id": "constructos-23",
+    "storage_bucket": "constructos-23.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:369902018158:android:b6c4cff7583044717c907f",
+        "mobilesdk_app_id": "1:849976822411:android:710963d1e58ae22444228e",
         "android_client_info": {
-          "package_name": "com.example.letschat"
+          "package_name": "com.constructos.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "849976822411-iqtl1v2e6cd3tnf89doej5uel7a12qp5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBWaTjN3OG_FRdtXm2ZMBHA5146TAWc2KY"
+          "current_key": "AIzaSyCVMsCvd2IybLdZbX5B-ASQNQnr5e4tNPo"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "849976822411-iqtl1v2e6cd3tnf89doej5uel7a12qp5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

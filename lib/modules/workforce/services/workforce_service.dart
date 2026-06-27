@@ -1,24 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/worker_model.dart';
 
 class WorkforceService {
-  static final List<Worker> workers = [];
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  static void addWorker(Worker worker) {
-    workers.add(worker);
+  // ADD WORKER
+  Future<void> addWorker(WorkerModel worker) async {
+    await _db.collection("workers").doc(worker.id).set(worker.toMap());
   }
 
-  static void deleteWorker(String id) {
-    workers.removeWhere((w) => w.id == id);
+  // GET WORKERS (REALTIME)
+  Stream<List<WorkerModel>> getWorkers(String companyId) {
+    return _db
+        .collection("workers")
+        .where("companyId", isEqualTo: companyId)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => WorkerModel.fromMap(doc.data(), doc.id))
+              .toList();
+        });
   }
 
-  static void updateWorker(Worker updated) {
-    final index = workers.indexWhere((w) => w.id == updated.id);
-    if (index != -1) {
-      workers[index] = updated;
-    }
-  }
-
-  static List<Worker> getWorkers() {
-    return workers;
+  // DELETE WORKER
+  Future<void> deleteWorker(String id) async {
+    await _db.collection("workers").doc(id).delete();
   }
 }

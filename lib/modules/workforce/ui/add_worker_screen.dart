@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/worker_model.dart';
 import '../services/workforce_service.dart';
 
 class AddWorkerScreen extends StatefulWidget {
-  final Worker? editWorker;
-
-  const AddWorkerScreen({super.key, this.editWorker});
+  const AddWorkerScreen({super.key});
 
   @override
   State<AddWorkerScreen> createState() => _AddWorkerScreenState();
@@ -15,38 +16,30 @@ class _AddWorkerScreenState extends State<AddWorkerScreen> {
   final name = TextEditingController();
   final phone = TextEditingController();
   final role = TextEditingController();
+  final wage = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
+  final WorkforceService _service = WorkforceService();
 
-    if (widget.editWorker != null) {
-      name.text = widget.editWorker!.name;
-      phone.text = widget.editWorker!.phone;
-      role.text = widget.editWorker!.role;
-    }
-  }
+  void saveWorker() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
-  void save() {
-    if (widget.editWorker == null) {
-      WorkforceService.addWorker(
-        Worker(
-          id: DateTime.now().toString(),
-          name: name.text,
-          phone: phone.text,
-          role: role.text,
-        ),
-      );
-    } else {
-      WorkforceService.updateWorker(
-        Worker(
-          id: widget.editWorker!.id,
-          name: name.text,
-          phone: phone.text,
-          role: role.text,
-        ),
-      );
-    }
+    final worker = WorkerModel(
+      id: FirebaseFirestore.instance.collection("workers").doc().id,
+      companyId: uid,
+      name: name.text,
+      phone: phone.text,
+      role: role.text,
+      dailyWage: double.tryParse(wage.text) ?? 0,
+      isActive: true,
+    );
+
+    await _service.addWorker(worker);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Worker Added")));
 
     Navigator.pop(context);
   }
@@ -54,36 +47,33 @@ class _AddWorkerScreenState extends State<AddWorkerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.editWorker == null ? "Add Worker" : "Edit Worker"),
-      ),
-
+      appBar: AppBar(title: const Text("Add Worker")),
       body: Padding(
         padding: const EdgeInsets.all(16),
-
         child: Column(
           children: [
             TextField(
               controller: name,
               decoration: const InputDecoration(labelText: "Name"),
             ),
-
             TextField(
               controller: phone,
               decoration: const InputDecoration(labelText: "Phone"),
             ),
-
             TextField(
               controller: role,
               decoration: const InputDecoration(labelText: "Role"),
+            ),
+            TextField(
+              controller: wage,
+              decoration: const InputDecoration(labelText: "Daily Wage"),
             ),
 
             const SizedBox(height: 20),
 
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              onPressed: save,
-              child: const Text("Save"),
+              onPressed: saveWorker,
+              child: const Text("Save Worker"),
             ),
           ],
         ),

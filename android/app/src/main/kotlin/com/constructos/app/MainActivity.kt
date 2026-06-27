@@ -1,4 +1,4 @@
-package com.example.letschat
+package com.constructos.app
 
 import io.flutter.embedding.android.FlutterActivity
 
