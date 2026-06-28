@@ -1,9 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  String _now() => DateTime.now().toIso8601String();
+
+  void _log(String msg) {
+    // replace with logger later
+  }
 
   // =========================
   // REGISTER COMPANY
@@ -29,38 +35,43 @@ class AuthService {
         "ownerName": ownerName,
         "phone": phone,
         "email": email,
-        "createdAt": FieldValue.serverTimestamp(),
+        "isActive": true,
+        "createdAt": _now(),
+        "updatedAt": _now(),
       });
 
       await _db.collection("users").doc(uid).set({
         "uid": uid,
         "companyId": uid,
-        "role": "owner",
+        "siteId": "default",
+        "name": ownerName,
         "email": email,
-        "createdAt": FieldValue.serverTimestamp(),
+        "phone": phone,
+        "role": "owner",
+        "companyName": companyName,
+        "isActive": true,
+        "createdAt": _now(),
+        "updatedAt": _now(),
       });
 
       return null;
     } on FirebaseAuthException catch (e) {
-      print("AUTH ERROR: ${e.code}");
-      print("AUTH MESSAGE: ${e.message}");
+      _log("AUTH ERROR: ${e.code}");
+      _log("AUTH MESSAGE: ${e.message}");
 
-      if (e.code == "email-already-in-use") {
-        return "This email is already registered";
+      switch (e.code) {
+        case "email-already-in-use":
+          return "This email is already registered";
+        case "weak-password":
+          return "Password should be at least 6 characters";
+        case "invalid-email":
+          return "Invalid email format";
+        default:
+          return e.message ?? "Authentication failed";
       }
-
-      if (e.code == "weak-password") {
-        return "Password should be at least 6 characters";
-      }
-
-      if (e.code == "invalid-email") {
-        return "Invalid email format";
-      }
-
-      return e.message ?? "Authentication failed";
     } catch (e) {
-      print("REGISTER ERROR: $e");
-      return "Error: $e";
+      _log("REGISTER ERROR: $e");
+      return "Error occurred during registration";
     }
   }
 
@@ -79,18 +90,24 @@ class AuthService {
 
       String uid = cred.user!.uid;
 
-      // fetch user data
-      DocumentSnapshot userDoc = await _db.collection("users").doc(uid).get();
+      final userDoc = await _db.collection("users").doc(uid).get();
 
       if (!userDoc.exists) {
         return "User data not found";
       }
 
-      return null; // success
+      return null;
     } on FirebaseAuthException catch (e) {
-      if (e.code == "user-not-found") return "No account found";
-      if (e.code == "wrong-password") return "Wrong password";
-      return e.message;
+      switch (e.code) {
+        case "user-not-found":
+          return "No account found";
+        case "wrong-password":
+          return "Wrong password";
+        case "invalid-credential":
+          return "Invalid email or password";
+        default:
+          return e.message;
+      }
     } catch (e) {
       return "Login failed";
     }
@@ -110,20 +127,22 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       return null;
+    } on FirebaseAuthException catch (e) {
+      return e.message;
     } catch (e) {
       return "Failed to send reset email";
     }
   }
 
   // =========================
-  // GET CURRENT USER
+  // CURRENT USER
   // =========================
   User? getCurrentUser() {
     return _auth.currentUser;
   }
 
   // =========================
-  // GET USER DATA (IMPORTANT FOR PHASE 1)
+  // GET USER DATA
   // =========================
   Future<Map<String, dynamic>?> getUserData(String uid) async {
     try {
@@ -132,6 +151,7 @@ class AuthService {
       if (doc.exists) {
         return doc.data() as Map<String, dynamic>;
       }
+
       return null;
     } catch (e) {
       return null;

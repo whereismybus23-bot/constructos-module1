@@ -48,7 +48,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    setState(() => loading = true);
+    setState(() {
+      loading = true;
+    });
 
     final result = await _authService.registerCompany(
       companyName: company,
@@ -58,9 +60,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: password,
     );
 
-    setState(() => loading = false);
-
     if (!mounted) return;
+
+    setState(() {
+      loading = false;
+    });
 
     if (result == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,11 +82,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Widget field(TextEditingController c, String label, {bool obscure = false}) {
+  Widget field(
+    TextEditingController controller,
+    String label, {
+    bool obscure = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
-        controller: c,
+        controller: controller,
         obscureText: obscure,
         decoration: InputDecoration(
           labelText: label,
@@ -90,6 +98,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    companyController.dispose();
+    ownerController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -121,14 +140,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   "Confirm Password",
                   obscure: true,
                 ),
-
                 const SizedBox(height: 20),
-
-                ElevatedButton(
-                  onPressed: loading ? null : register,
-                  child: loading
-                      ? const CircularProgressIndicator()
-                      : const Text("Create Company"),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: loading ? null : register,
+                    child: loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text("Create Company"),
+                  ),
                 ),
               ],
             ),

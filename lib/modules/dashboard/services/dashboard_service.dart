@@ -3,57 +3,77 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class DashboardService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // WORKERS COUNT
-  Stream<int> getWorkersCount(String companyId) {
+  // =========================
+  // WORKFORCE COUNT
+  // =========================
+  Stream<int> getWorkersCount(String companyId, String siteId) {
     return _db
-        .collection("workers")
-        .where("companyId", isEqualTo: companyId)
+        .collection('workers')
+        .where('companyId', isEqualTo: companyId)
+        .where('siteId', isEqualTo: siteId)
         .snapshots()
         .map((snap) => snap.docs.length);
   }
 
+  // =========================
   // MATERIALS COUNT
-  Stream<int> getMaterialsCount(String companyId) {
+  // =========================
+  Stream<int> getMaterialsCount(String companyId, String siteId) {
     return _db
-        .collection("materials")
-        .where("companyId", isEqualTo: companyId)
+        .collection('materials')
+        .where('companyId', isEqualTo: companyId)
+        .where('siteId', isEqualTo: siteId)
         .snapshots()
         .map((snap) => snap.docs.length);
   }
 
+  // =========================
   // TOTAL EXPENSES
-  Stream<double> getTotalExpenses(String companyId) {
+  // =========================
+  Stream<double> getTotalExpenses(String companyId, String siteId) {
     return _db
-        .collection("expenses")
-        .where("companyId", isEqualTo: companyId)
+        .collection('expenses')
+        .where('companyId', isEqualTo: companyId)
+        .where('siteId', isEqualTo: siteId)
         .snapshots()
         .map((snap) {
-          double total = 0;
+          double total = 0.0;
 
-          for (var doc in snap.docs) {
-            total += (doc["amount"] ?? 0).toDouble();
+          for (final doc in snap.docs) {
+            final data = doc.data();
+            final amount = data['amount'];
+
+            if (amount is num) {
+              total += amount.toDouble();
+            }
           }
 
           return total;
         });
   }
 
-  // PROGRESS AVERAGE
-  Stream<double> getProgress(String companyId) {
+  // =========================
+  // PROGRESS %
+  // =========================
+  Stream<double> getProgress(String companyId, String siteId) {
     return _db
-        .collection("progress")
-        .where("companyId", isEqualTo: companyId)
+        .collection('projects')
+        .where('companyId', isEqualTo: companyId)
+        .where('siteId', isEqualTo: siteId)
         .snapshots()
         .map((snap) {
-          if (snap.docs.isEmpty) return 0;
+          if (snap.docs.isEmpty) return 0.0;
 
-          double total = 0;
+          int completed = 0;
 
-          for (var doc in snap.docs) {
-            total += (doc["percentage"] ?? 0).toDouble();
+          for (final doc in snap.docs) {
+            final data = doc.data();
+            if (data['status'] == 'done') {
+              completed++;
+            }
           }
 
-          return total / snap.docs.length;
+          return (completed / snap.docs.length) * 100;
         });
   }
 }
