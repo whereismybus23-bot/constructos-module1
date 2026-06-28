@@ -8,7 +8,8 @@ class AuthService {
   String _now() => DateTime.now().toIso8601String();
 
   void _log(String msg) {
-    // replace with logger later
+    // Replace with logger later
+    print(msg);
   }
 
   // =========================
@@ -22,13 +23,19 @@ class AuthService {
     required String password,
   }) async {
     try {
+      // -------------------------
+      // Create Firebase User
+      // -------------------------
       UserCredential userCred = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      String uid = userCred.user!.uid;
+      final uid = userCred.user!.uid;
 
+      // -------------------------
+      // Create Company
+      // -------------------------
       await _db.collection("companies").doc(uid).set({
         "companyId": uid,
         "companyName": companyName,
@@ -40,38 +47,66 @@ class AuthService {
         "updatedAt": _now(),
       });
 
+      // -------------------------
+      // Create Default Site
+      // -------------------------
+      final siteRef = _db.collection("sites").doc();
+
+      await siteRef.set({
+        "companyId": uid,
+        "name": "Main Site",
+        "code": "SITE-001",
+        "address": "",
+        "isActive": true,
+        "createdAt": _now(),
+        "updatedAt": _now(),
+      });
+
+      // -------------------------
+      // Create Owner User
+      // -------------------------
       await _db.collection("users").doc(uid).set({
         "uid": uid,
         "companyId": uid,
-        "siteId": "default",
+
+        // Default selected site
+        "siteId": siteRef.id,
+
         "name": ownerName,
         "email": email,
         "phone": phone,
+
         "role": "owner",
+
         "companyName": companyName,
+
         "isActive": true,
+
         "createdAt": _now(),
         "updatedAt": _now(),
       });
 
       return null;
     } on FirebaseAuthException catch (e) {
-      _log("AUTH ERROR: ${e.code}");
-      _log("AUTH MESSAGE: ${e.message}");
+      _log("AUTH ERROR : ${e.code}");
+      _log("MESSAGE    : ${e.message}");
 
       switch (e.code) {
         case "email-already-in-use":
           return "This email is already registered";
+
         case "weak-password":
           return "Password should be at least 6 characters";
+
         case "invalid-email":
           return "Invalid email format";
+
         default:
           return e.message ?? "Authentication failed";
       }
     } catch (e) {
-      _log("REGISTER ERROR: $e");
-      return "Error occurred during registration";
+      _log("REGISTER ERROR : $e");
+      return "Registration failed";
     }
   }
 
@@ -88,7 +123,7 @@ class AuthService {
         password: password,
       );
 
-      String uid = cred.user!.uid;
+      final uid = cred.user!.uid;
 
       final userDoc = await _db.collection("users").doc(uid).get();
 
@@ -101,10 +136,13 @@ class AuthService {
       switch (e.code) {
         case "user-not-found":
           return "No account found";
+
         case "wrong-password":
           return "Wrong password";
+
         case "invalid-credential":
           return "Invalid email or password";
+
         default:
           return e.message;
       }
@@ -129,7 +167,7 @@ class AuthService {
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
-    } catch (e) {
+    } catch (_) {
       return "Failed to send reset email";
     }
   }
@@ -149,11 +187,11 @@ class AuthService {
       final doc = await _db.collection("users").doc(uid).get();
 
       if (doc.exists) {
-        return doc.data() as Map<String, dynamic>;
+        return doc.data();
       }
 
       return null;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }

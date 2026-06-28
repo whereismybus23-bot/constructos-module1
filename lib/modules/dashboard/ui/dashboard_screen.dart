@@ -21,6 +21,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int selectedIndex = 0;
+
   UserModel? currentUser;
   bool isLoading = true;
 
@@ -38,19 +39,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> loadDashboardData() async {
     final user = await _userService.getCurrentUser();
-    if (!mounted || user == null) return;
+
+    if (!mounted || user == null) {
+      return;
+    }
 
     final siteList = await _siteService.getSites(user.companyId);
+
     SiteModel? activeSite;
 
     if (siteList.isNotEmpty) {
       activeSite = siteList.firstWhere(
-        (s) => s.id == user.siteId,
+        (site) => site.id == user.siteId,
         orElse: () => siteList.first,
       );
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       currentUser = user;
@@ -64,15 +71,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void onSiteChanged(SiteModel? site) {
     if (site == null) return;
+
     setState(() {
       selectedSite = site;
       currentUser = currentUser!.copyWith(siteId: site.id);
     });
   }
 
-  void logoutProcess() async {
+  Future<void> _logoutProcess() async {
     await FirebaseAuth.instance.signOut();
+
     if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -95,7 +105,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xffF8F8F8),
 
-      // 2. Fixed Site Dropdown Top Right placement
       appBar: AppBar(
         title: const Text(
           "ConstructOS",
@@ -108,12 +117,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (sites.isNotEmpty)
             PopupMenuButton<SiteModel>(
               icon: const Icon(Icons.location_on, color: Colors.blue, size: 28),
-              tooltip: "Switch Sites Selection",
+              tooltip: "Switch Site",
               initialValue: selectedSite,
               onSelected: onSiteChanged,
               itemBuilder: (context) {
                 return sites.map((site) {
-                  return PopupMenuItem(value: site, child: Text(site.name));
+                  return PopupMenuItem<SiteModel>(
+                    value: site,
+                    child: Text(site.name),
+                  );
                 }).toList();
               },
             )
@@ -125,17 +137,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.redAccent),
-            onPressed: logoutProcess,
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: _logoutProcess,
           ),
         ],
       ),
 
-      // 4. Custom Floating action positioning implementation template configurations
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 50.0),
+        padding: const EdgeInsets.only(bottom: 50),
         child: FloatingActionButton(
           backgroundColor: Colors.blue,
+          child: const Icon(Icons.add),
           onPressed: () {
             showModalBottomSheet(
               context: context,
@@ -144,24 +156,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               builder: (_) {
                 return Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ListTile(
-                        leading: const Icon(
-                          Icons.group_add,
-                          color: Colors.blue,
-                        ),
-                        title: const Text("Add New Worker Info"),
+                        leading: const Icon(Icons.group_add),
+                        title: const Text("Add Worker"),
                         onTap: () => Navigator.pop(context),
                       ),
                       ListTile(
-                        leading: const Icon(
-                          Icons.assignment,
-                          color: Colors.orange,
-                        ),
-                        title: const Text("Add Materials Entry"),
+                        leading: const Icon(Icons.inventory),
+                        title: const Text("Add Material"),
                         onTap: () => Navigator.pop(context),
                       ),
                     ],
@@ -170,22 +176,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             );
           },
-          child: const Icon(Icons.add, color: Colors.white, size: 30),
         ),
       ),
+
       floatingActionButtonLocation: FloatingActionButtonLocation.startDocked,
 
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Red Welcome Header Row Element Setup
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
-                  vertical: 24,
                   horizontal: 16,
+                  vertical: 24,
                 ),
                 decoration: const BoxDecoration(
                   color: Color(0xffE53935),
@@ -199,7 +203,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     const Text(
                       "Good Morning ☀️",
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      style: TextStyle(color: Colors.white70),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -215,28 +219,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
 
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Dashboard Summary",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // 3. Dynamic Clickable Modules Target Blocks Configurations
                     DashboardSummaryWidget(
                       companyId: currentUser!.companyId,
                       siteId: activeSiteId,
                     ),
 
                     const SizedBox(height: 24),
+
                     ActivityFeedWidget(siteId: activeSiteId),
+
                     const SizedBox(height: 100),
                   ],
                 ),
